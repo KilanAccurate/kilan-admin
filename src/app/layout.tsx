@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { MantineProvider } from '@mantine/core';
 import { AuthProvider } from './context/AuthContext';
+import FCMHandler from '@/components/fcm-handler';
+import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -13,7 +15,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body cz-shortcut-listen="true">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <FCMHandler />
+          <Toaster />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

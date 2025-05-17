@@ -8,6 +8,7 @@ export enum ApiEndpoints {
     ABSENSI_LIST = '/absensi/admin/list',
     CUTI_ACTION = '/cuti/action',
     LEMBUR_ACTION = '/absensi/approval',
-    SITELOCATION = '/site-locations'
+    SITELOCATION = '/site-locations',
+    UPDATEFCM = 'auth/update-fcm-token'
     // ...add more as needed
 }
