@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, FileText, Home, LayoutDashboard, LogOutIcon, Package, PaperclipIcon, Settings, ShoppingCart, TimerIcon, Users, WorkflowIcon } from "lucide-react"
+import { BarChart3, FileText, Home, LayoutDashboard, LogOutIcon, Package, PaperclipIcon, Settings, SettingsIcon, ShoppingCart, TimerIcon, Users, WorkflowIcon } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
 import { UserNav } from "@/components/user-nav"
@@ -42,59 +42,12 @@ const navItems = [
         icon: PaperclipIcon,
         href: "/admin/cuti",
     },
-    // {
-    //     title: "Products",
-    //     icon: Package,
-    //     href: "#",
-    //     items: [
-    //         {
-    //             title: "Inventory",
-    //             href: "#",
-    //         },
-    //         {
-    //             title: "Categories",
-    //             href: "#",
-    //         },
-    //         {
-    //             title: "Brands",
-    //             href: "#",
-    //         },
-    //     ],
-    // },
-    // {
-    //     title: "Orders",
-    //     icon: ShoppingCart,
-    //     href: "#",
-    //     items: [
-    //         {
-    //             title: "All Orders",
-    //             href: "#",
-    //         },
-    //         {
-    //             title: "Pending",
-    //             href: "#",
-    //         },
-    //         {
-    //             title: "Completed",
-    //             href: "#",
-    //         },
-    //     ],
-    // },
-    // {
-    //     title: "Customers",
-    //     icon: Users,
-    //     href: "#",
-    // },
-    // {
-    //     title: "Reports",
-    //     icon: FileText,
-    //     href: "#",
-    // },
-    // {
-    //     title: "Settings",
-    //     icon: Settings,
-    //     href: "#",
-    // },
+    {
+        title: "Setting",
+        icon: SettingsIcon,
+        href: "/admin/settings",
+    },
+
 ]
 
 

@@ -98,6 +98,7 @@ export default function LoginPage() {
     const initLoggedIn = () => {
         if (isLoggedIn) {
             console.log('called here')
+
             router.replace('/')
         }
     }

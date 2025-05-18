@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '../(protected)/admin/users/component';
+import { deleteToken, getMessaging } from 'firebase/messaging';
+import { app } from '@/lib/firebase';
 
 type AuthContextType = {
     isLoggedIn: boolean;
@@ -28,7 +30,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsLoggedIn(true);
     };
 
-    const logout = () => {
+    const logout = async () => {
+        const messaging = getMessaging(app);
+        try {
+            const deleted = await deleteToken(messaging);
+            console.log("FCM token deleted:", deleted);
+        } catch (e) {
+            console.error("Failed to delete FCM token", e);
+        }
+
         localStorage.removeItem('token');
         setIsLoggedIn(false);
     };

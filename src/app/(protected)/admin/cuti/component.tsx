@@ -139,8 +139,13 @@ export default function CutiTable() {
             accessorKey: "pekerjaanDiserahkanPada",
             header: "Pekerjaan Diserahkan Pada",
             cell: ({ row }) => {
-                const list = row.getValue("pekerjaanDiserahkanPada") as string[]
-                return <div>{list.join(", ")}</div>
+                const userList = row.getValue("pekerjaanDiserahkanPada") as User[];
+
+                return (
+                    <div>
+                        {userList.map(user => user.fullName).join(", ")}
+                    </div>
+                );
             },
         },
         {

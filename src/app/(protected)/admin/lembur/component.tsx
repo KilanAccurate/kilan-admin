@@ -48,10 +48,7 @@ export default function LemburTable() {
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
     const [rowSelection, setRowSelection] = useState({})
     const [showDialog, setShowDialog] = useState(false)
-    const [date, setDate] = React.useState<DateRange | undefined>({
-        from: new Date(2022, 0, 20),
-        to: new Date(),
-    })
+    const [date, setDate] = React.useState<DateRange | undefined>()
 
     const columns: ColumnDef<Absensi>[] = [
         {
