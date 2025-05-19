@@ -12,17 +12,12 @@ import {
 } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MapPin } from "lucide-react"
+import { LatLng } from "@/app/(auth)/login/page"
 
-interface Coordinates {
-    topLeft: { lat: string; lng: string }
-    topRight: { lat: string; lng: string }
-    bottomLeft: { lat: string; lng: string }
-    bottomRight: { lat: string; lng: string }
-}
 
 interface SiteCoordinatesDialogProps {
     siteName: string
-    coordinates: Coordinates
+    coordinates: LatLng[]
 }
 
 export function SiteCoordinatesDialog({ siteName, coordinates }: SiteCoordinatesDialogProps) {
@@ -47,32 +42,19 @@ export function SiteCoordinatesDialog({ siteName, coordinates }: SiteCoordinates
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Position</TableHead>
+                                <TableHead>Point</TableHead>
                                 <TableHead>Latitude</TableHead>
                                 <TableHead>Longitude</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <TableRow>
-                                <TableCell className="font-medium">Top Left</TableCell>
-                                <TableCell>{coordinates.topLeft.lat}</TableCell>
-                                <TableCell>{coordinates.topLeft.lng}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell className="font-medium">Top Right</TableCell>
-                                <TableCell>{coordinates.topRight.lat}</TableCell>
-                                <TableCell>{coordinates.topRight.lng}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell className="font-medium">Bottom Left</TableCell>
-                                <TableCell>{coordinates.bottomLeft.lat}</TableCell>
-                                <TableCell>{coordinates.bottomLeft.lng}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell className="font-medium">Bottom Right</TableCell>
-                                <TableCell>{coordinates.bottomRight.lat}</TableCell>
-                                <TableCell>{coordinates.bottomRight.lng}</TableCell>
-                            </TableRow>
+                            {coordinates.map((coord, index) => (
+                                <TableRow key={index}>
+                                    <TableCell className="font-medium">Point {index + 1}</TableCell>
+                                    <TableCell>{coord.lat}</TableCell>
+                                    <TableCell>{coord.lng}</TableCell>
+                                </TableRow>
+                            ))}
                         </TableBody>
                     </Table>
                 </div>

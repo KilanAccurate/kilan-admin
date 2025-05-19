@@ -15,51 +15,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 // import Home from '@/app/page';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
+import { useGlobalContext } from '@/app/context/GlobalContext';
+
+export type LatLng = {
+    lat: number;
+    lng: number;
+}
 
 export type SiteLocation = {
     _id: string;
+    siteCity: string | undefined;
     siteName: string;
+    sitePolygon: LatLng;
 };
 
 export default function LoginPage() {
     const [name, setName] = useState('');
     const [password, setPassword] = useState('');
     const [siteLocation, setSiteLocation] = useState('');
-    const [sites, setSites] = useState<SiteLocation[]>([]);
     const [errorMessage, setErrorMessage] = useState('');
-    const [isLoading, setIsLoading] = useState(true);
     const { login, isLoggedIn, isLoading: isAuthLoading } = useAuth();
+    const { sites, isLoading } = useGlobalContext();
 
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
-
-    useEffect(() => {
-        initLoggedIn();
-
-
-        const getSiteLocations = async () => {
-            setIsLoading(true)
-            try {
-                const response = await ApiService.get(ApiEndpoints.SITELOCATION);
-                if (response?.data?.data) {
-                    setSites(response.data.data);
-                    setErrorMessage('');
-                } else {
-                    setErrorMessage('Site Location not found');
-                }
-            } catch (error) {
-                console.log(error)
-                setErrorMessage('Failed to load site locations');
-            } finally {
-                setIsLoading(false)
-            }
-        };
-
-        getSiteLocations();
-
-
-    }, [isLoggedIn]);
 
     useEffect(() => {
         if (!isAuthLoading && isLoggedIn) {
@@ -68,6 +48,7 @@ export default function LoginPage() {
     }, [isAuthLoading, isLoggedIn, router]);
 
     const handleLogin = async () => {
+        setLoading(true);
         setErrorMessage('');
         try {
             const res = await ApiService.post(ApiEndpoints.AUTH_LOGIN, {
@@ -76,8 +57,11 @@ export default function LoginPage() {
                 site: siteLocation,
                 isAdmin: true,
             });
-            if (res.data.data.token != null) {
-                login(res.data.data.token);
+
+            const userData = res.data.data;
+            if (userData.token) {
+                login(userData);
+                setLoading(false);
             }
         } catch (err) {
             if (
@@ -86,13 +70,14 @@ export default function LoginPage() {
                 'data' in err &&
                 typeof (err as { data?: { message?: string } }).data?.message === 'string'
             ) {
+                setLoading(false);
                 setErrorMessage((err as { data: { message: string } }).data.message);
             } else {
+                setLoading(false);
                 setErrorMessage('Login failed');
             }
-        } finally {
-            initLoggedIn()
         }
+
     };
 
     const initLoggedIn = () => {

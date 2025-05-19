@@ -5,6 +5,7 @@ import { MantineProvider } from '@mantine/core';
 import { AuthProvider } from './context/AuthContext';
 import FCMHandler from '@/components/fcm-handler';
 import { Toaster } from '@/components/ui/sonner';
+import { GlobalProvider } from './context/GlobalContext';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -15,11 +16,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body cz-shortcut-listen="true">
-        <AuthProvider>
-          <FCMHandler />
-          <Toaster />
-          {children}
-        </AuthProvider>
+        <GlobalProvider>
+          <AuthProvider>
+            <FCMHandler />
+            <Toaster />
+            {children}
+          </AuthProvider>
+        </GlobalProvider>
       </body>
     </html>
   );

@@ -357,7 +357,7 @@ export default function CutiTable() {
     })
 
     if (loading) {
-        return <div className="p-4">Loading users...</div>
+        return <div className="p-4">Loading cuti...</div>
     }
 
     if (error) {

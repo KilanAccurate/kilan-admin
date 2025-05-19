@@ -9,7 +9,7 @@ import { ApiService } from "@/api/api-service";
 import { ApiEndpoints } from "@/api/endpoints";
 import { toast } from "sonner";
 
-const vapidKey = "BAk6pebh1EvauXhb-M3gr0PFR1yc-PVN7fNGmVhQSw-a_f1KFTQthW24XMIuShZNZ7PRmavo1PsaqZJeJ301zDQ";
+const vapidKey = process.env.NEXT_PUBLIC_VAPID_KEY ?? '';
 
 export function useFCM() {
     const { login, isLoggedIn, isLoading: isAuthLoading } = useAuth();

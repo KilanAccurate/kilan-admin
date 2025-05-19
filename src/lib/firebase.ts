@@ -2,16 +2,17 @@
 import { initializeApp } from "firebase/app";
 import { getMessaging } from "firebase/messaging";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyDpVW5B8sx7aPACM64xPxP5K8qGTFC7vYI",
-    authDomain: "kilan-accurate.firebaseapp.com",
-    projectId: "kilan-accurate",
-    storageBucket: "kilan-accurate.firebasestorage.app",
-    messagingSenderId: "396860509364",
-    appId: "1:396860509364:web:fac9c5d31272e32a105be1",
-    measurementId: "G-7RENG0SRP9"
-};
+const base64Config = process.env.NEXT_PUBLIC_FIREBASE_CONFIG;
 
-export const app = initializeApp(firebaseConfig);
+if (!base64Config) {
+    throw new Error("Firebase config not found in environment variables");
+}
 
-export const messaging = typeof window !== "undefined" ? getMessaging(app) : null;
+const decodedConfig = JSON.parse(
+    Buffer.from(base64Config, "base64").toString("utf-8")
+);
+
+export const app = initializeApp(decodedConfig);
+
+export const messaging =
+    typeof window !== "undefined" ? getMessaging(app) : null;

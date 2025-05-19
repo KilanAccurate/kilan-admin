@@ -9,6 +9,8 @@ export enum ApiEndpoints {
     CUTI_ACTION = '/cuti/action',
     LEMBUR_ACTION = '/absensi/approval',
     SITELOCATION = '/site-locations',
-    UPDATEFCM = 'auth/update-fcm-token'
+    UPDATEFCM = '/auth/update-fcm-token',
+    GLOBAL_SETTING = '/global-setting',
+    UPLOAD_CAROUSEL_IMAGE = '/upload-carousel',
     // ...add more as needed
 }

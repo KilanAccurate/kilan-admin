@@ -351,7 +351,7 @@ export default function LemburTable() {
     })
 
     if (loading) {
-        return <div className="p-4">Loading users...</div>
+        return <div className="p-4">Loading lembur...</div>
     }
 
     if (error) {

@@ -1,28 +1,33 @@
-// lib/api/apiService.ts
 'use client';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? '';
+const ADMIN_API_KEY = process.env.NEXT_PUBLIC_ADMIN_API_KEY ?? '';
 
 const api = axios.create({
     baseURL: BASE_URL,
-    timeout: 10000,
+    timeout: 60000,
     headers: {
         'Content-Type': 'application/json',
+        'x-api-key': ADMIN_API_KEY,
     },
 });
 
-// Attach token and log request
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+            config.headers = config.headers ?? {};
+            config.headers['Authorization'] = `Bearer ${token}`;
         }
 
+        // IMPORTANT: check if data is FormData, then set correct header
+        console.log('Request data is FormData:', config.data instanceof FormData);
+
         if (config.data instanceof FormData) {
+            config.headers = config.headers ?? {};
             config.headers['Content-Type'] = 'multipart/form-data';
         }
 
@@ -30,6 +35,7 @@ api.interceptors.request.use(
     },
     (error) => Promise.reject(error)
 );
+
 
 // Log response and error
 api.interceptors.response.use(

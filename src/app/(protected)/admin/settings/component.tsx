@@ -10,6 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MapPin, Plus, Trash2, Upload, ImageIcon, X } from "lucide-react"
 import { SiteCoordinatesDialog } from "@/components/site-coordinate-dialog"
+import { useGlobalContext } from "@/app/context/GlobalContext"
+import { ApiService } from "@/api/api-service"
+import { ApiEndpoints } from "@/api/endpoints"
 
 interface SiteLocation {
     id: string
@@ -31,7 +34,9 @@ interface UploadedImage {
 }
 
 export default function SiteManagementPage() {
-    const [sites, setSites] = useState<SiteLocation[]>([])
+    // const [sites, setSites] = useState<SiteLocation[]>([])
+    const { sites, isLoading, refreshSites, carouselImages, refreshCarousel } = useGlobalContext();
+    const [isUpdatingSite, setIsUpdateSite] = useState<boolean>(false);
 
     // useEffect(() => {
     //     const fetchSites = async () => {
@@ -74,7 +79,7 @@ export default function SiteManagementPage() {
         },
     })
 
-    const [images, setImages] = useState<UploadedImage[]>([])
+    // const [images, setImages] = useState<UploadedImage[]>([])
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
@@ -97,112 +102,143 @@ export default function SiteManagementPage() {
         }
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleSubmit = async (e: React.FormEvent) => {
+        setIsUpdateSite(true);
+        e.preventDefault();
 
-        // Validate form
-        if (!formData.siteName || !formData.city) {
-            alert("Please fill in site name and city")
-            return
-        }
+        const { siteName, city, coordinates } = formData;
 
-        // Add new site
-        const newSite: SiteLocation = {
-            ...formData,
-            id: Date.now().toString(),
-        }
-
-        setSites([...sites, newSite])
-
-        // Reset form
-        setFormData({
-            siteName: "",
-            city: "",
-            coordinates: {
-                topLeft: { lat: "", lng: "" },
-                topRight: { lat: "", lng: "" },
-                bottomLeft: { lat: "", lng: "" },
-                bottomRight: { lat: "", lng: "" },
+        const sitePolygon = [
+            {
+                lat: parseFloat(coordinates.topLeft.lat),
+                lng: parseFloat(coordinates.topLeft.lng),
             },
-        })
+            {
+                lat: parseFloat(coordinates.topRight.lat),
+                lng: parseFloat(coordinates.topRight.lng),
+            },
+            {
+                lat: parseFloat(coordinates.bottomRight.lat),
+                lng: parseFloat(coordinates.bottomRight.lng),
+            },
+            {
+                lat: parseFloat(coordinates.bottomLeft.lat),
+                lng: parseFloat(coordinates.bottomLeft.lng),
+            },
+        ];
+
+        const payload = {
+            siteName,
+            siteCity: city,
+            sitePolygon,
+        };
+
+        try {
+            const res = await ApiService.post(ApiEndpoints.SITELOCATION, payload);
+            console.log('Site added:', res.data);
+            refreshSites();
+            setIsUpdateSite(false);
+        } catch (err) {
+            setIsUpdateSite(false);
+            console.error('Failed to add site:', err);
+            // Optionally show error to user
+        }
+    };
+
+
+    const deleteSite = async (id: string) => {
+        setIsUpdateSite(true);
+        try {
+            const res = await ApiService.delete(`${ApiEndpoints.SITELOCATION}/${id}`);
+            console.log('Site deleted:', res.data);
+            refreshSites();
+            setIsUpdateSite(false);
+        } catch (err) {
+            setIsUpdateSite(false);
+            console.error('Failed to delete site:', err);
+            // Optionally show error to user
+        }
+        // setSites(sites.filter((site) => site.id !== id))
     }
 
-    const deleteSite = (id: string) => {
-        setSites(sites.filter((site) => site.id !== id))
-    }
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files
-        if (!files || files.length === 0) return
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
-        const newImages: UploadedImage[] = []
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        console.log(files[0])
+        const formData = new FormData();
+        formData.append('file', files[0]); // field name MUST match backend
+        for (const pair of formData.entries()) {
+            console.log(pair[0], pair[1]);
+        }
 
-        Array.from(files).forEach((file) => {
-            // Only accept image files
-            if (!file.type.startsWith("image/")) {
-                alert(`File ${file.name} is not an image`)
-                return
-            }
+        // Or to specifically check if 'file' exists:
+        if ([...formData.keys()].includes('file')) {
+            console.log("FormData contains 'file'");
+        } else {
+            console.log("FormData does NOT contain 'file'");
+        }
 
-            // Create a URL for the image
-            const imageUrl = URL.createObjectURL(file)
+        try {
+            const response = await ApiService.post(`${ApiEndpoints.GLOBAL_SETTING}${ApiEndpoints.UPLOAD_CAROUSEL_IMAGE}`, formData);
+            console.log('Uploaded image URLs:', response.data);
+        } catch (err) {
+            console.error('Upload failed:', err);
+        }
 
-            newImages.push({
-                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-                name: file.name,
-                url: imageUrl,
-                size: file.size,
-            })
-        })
+        e.target.value = "";
+    };
 
-        setImages((prevImages) => [...prevImages, ...newImages])
 
-        // Reset the input
-        e.target.value = ""
-    }
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault()
     }
 
     const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault()
+        e.preventDefault();
 
-        const files = e.dataTransfer.files
-        if (!files || files.length === 0) return
+        const files = e.dataTransfer.files;
+        if (!files || files.length === 0) return;
 
-        const newImages: UploadedImage[] = []
+        const file = files[0];
 
-        Array.from(files).forEach((file) => {
-            // Only accept image files
-            if (!file.type.startsWith("image/")) {
-                alert(`File ${file.name} is not an image`)
-                return
-            }
+        if (!file.type.startsWith("image/")) {
+            alert(`File ${file.name} is not an image`);
+            return;
+        }
 
-            // Create a URL for the image
-            const imageUrl = URL.createObjectURL(file)
+        // ✅ Call upload here
+        handleImageUploadFromFile(file);
+    };
 
-            newImages.push({
-                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-                name: file.name,
-                url: imageUrl,
-                size: file.size,
-            })
-        })
+    const handleImageUploadFromFile = async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
 
-        setImages((prevImages) => [...prevImages, ...newImages])
-    }
+        try {
+            const response = await ApiService.post(
+                `${ApiEndpoints.GLOBAL_SETTING}${ApiEndpoints.UPLOAD_CAROUSEL_IMAGE}`,
+                formData
+            );
+            console.log('Uploaded image URLs:', response.data);
+        } catch (err) {
+            console.error('Upload failed:', err);
+        }
+    };
+
+
 
     const deleteImage = (id: string) => {
-        setImages((prevImages) => {
-            const imageToDelete = prevImages.find((img) => img.id === id)
-            if (imageToDelete) {
-                // Revoke the object URL to free up memory
-                URL.revokeObjectURL(imageToDelete.url)
-            }
-            return prevImages.filter((img) => img.id !== id)
-        })
+        // setImages((prevImages) => {
+        //     const imageToDelete = prevImages.find((img) => img.id === id)
+        //     if (imageToDelete) {
+        //         // Revoke the object URL to free up memory
+        //         URL.revokeObjectURL(imageToDelete.url)
+        //     }
+        //     return prevImages.filter((img) => img.id !== id)
+        // })
     }
 
     const formatFileSize = (bytes: number): string => {
@@ -368,7 +404,9 @@ export default function SiteManagementPage() {
                         <CardDescription>List of all registered site locations</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {sites.length === 0 ? (
+                        {isLoading || isUpdatingSite ? (<div className="flex justify-center items-center w-full min-h-[200px]">
+                            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500"></div>
+                        </div>) : sites.length === 0 ? (
                             <div className="flex h-40 items-center justify-center rounded-md border border-dashed p-8 text-center">
                                 <div>
                                     <MapPin className="mx-auto h-10 w-10 text-muted-foreground" />
@@ -389,18 +427,18 @@ export default function SiteManagementPage() {
                                     </TableHeader>
                                     <TableBody>
                                         {sites.map((site) => (
-                                            <TableRow key={site.id}>
+                                            <TableRow key={site._id}>
                                                 <TableCell className="font-medium">{site.siteName}</TableCell>
-                                                <TableCell>{site.city}</TableCell>
+                                                <TableCell>{site.siteCity}</TableCell>
                                                 <TableCell>
-                                                    <SiteCoordinatesDialog siteName={site.siteName} coordinates={site.coordinates} />
+                                                    <SiteCoordinatesDialog siteName={site.siteName} coordinates={Array.isArray(site.sitePolygon) ? site.sitePolygon : [site.sitePolygon]} />
                                                 </TableCell>
                                                 <TableCell>
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
                                                         className="h-8 w-8 text-destructive"
-                                                        onClick={() => deleteSite(site.id)}
+                                                        onClick={() => deleteSite(site._id)}
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                         <span className="sr-only">Delete</span>
@@ -409,6 +447,7 @@ export default function SiteManagementPage() {
                                             </TableRow>
                                         ))}
                                     </TableBody>
+
                                 </Table>
                             </div>
                         )}
@@ -445,7 +484,9 @@ export default function SiteManagementPage() {
                         </Button>
                     </div>
 
-                    {images.length === 0 ? (
+                    {isLoading ? (<div className="flex justify-center items-center w-full min-h-[200px]">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500"></div>
+                    </div>) : carouselImages.length === 0 ? (
                         <div className="flex h-40 items-center justify-center rounded-md border border-dashed p-8 text-center">
                             <div>
                                 <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground" />
@@ -455,14 +496,14 @@ export default function SiteManagementPage() {
                         </div>
                     ) : (
                         <div>
-                            <h3 className="mb-4 text-lg font-medium">Uploaded Images ({images.length})</h3>
+                            <h3 className="mb-4 text-lg font-medium">Uploaded Images ({carouselImages.length})</h3>
                             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                                {images.map((image) => (
-                                    <div key={image.id} className="group relative overflow-hidden rounded-lg border">
+                                {carouselImages.map((image) => (
+                                    <div key={image} className="group relative overflow-hidden rounded-lg border">
                                         <div className="aspect-square w-full overflow-hidden">
                                             <img
-                                                src={image.url || "/placeholder.svg"}
-                                                alt={image.name}
+                                                src={image || "/placeholder.svg"}
+                                                alt={image}
                                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                             />
                                         </div>
@@ -471,14 +512,12 @@ export default function SiteManagementPage() {
                                                 variant="destructive"
                                                 size="icon"
                                                 className="ml-auto h-7 w-7 self-start"
-                                                onClick={() => deleteImage(image.id)}
+                                            // onClick={() =>
+                                            //     // setImages((prev) => prev.filter((img) => img.id !== image.id))
+                                            // }
                                             >
                                                 <X className="h-4 w-4" />
                                             </Button>
-                                            <div className="bg-black/60 p-2 text-xs text-white">
-                                                <p className="truncate font-medium">{image.name}</p>
-                                                <p className="text-xs text-gray-300">{formatFileSize(image.size)}</p>
-                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -490,3 +529,19 @@ export default function SiteManagementPage() {
         </div>
     )
 }
+
+export const uploadCarouselImage = async (file: File): Promise<string[]> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await ApiService.post<{ updatedList: string[] }>(
+            `${ApiEndpoints.GLOBAL_SETTING}${ApiEndpoints.UPLOAD_CAROUSEL_IMAGE}`,
+            formData
+        );
+
+        return response.data.updatedList;
+    } catch (error: any) {
+        throw new Error(error?.data?.message || 'Upload failed');
+    }
+};
